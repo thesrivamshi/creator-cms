@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import DrawingModal from "./drawing-modal";
 
@@ -53,6 +54,7 @@ function parseStringArray(text: string): string[] {
 
 export default function ScriptStudio(props: Props) {
   const supabase = createClient();
+  const router = useRouter();
   const { idea, script, userId } = props;
 
   const [hook, setHook] = useState(script.hook ?? "");
@@ -71,6 +73,7 @@ export default function ScriptStudio(props: Props) {
   const [endingSuggestions, setEndingSuggestions] = useState<string[]>([]);
   const [aiBusy, setAiBusy] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [platforms, setPlatforms] = useState<string[]>(["instagram", "twitter", "linkedin"]);
 
   const cursorRef = useRef<Record<string, number>>({});
   const scriptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -628,10 +631,57 @@ export default function ScriptStudio(props: Props) {
         )}
       </section>
 
-      {/* Variants (wired in M5) */}
-      <button className="btn-primary w-full opacity-50" disabled title="Arrives with M5">
-        Generate platform variants ▸ (M5)
-      </button>
+      {/* Generate platform variants */}
+      <section className="rounded-2xl border border-neutral-200 bg-white p-4">
+        <h2 className="mb-2 font-semibold tracking-wide">PLATFORM VARIANTS</h2>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {["instagram", "twitter", "linkedin"].map((p) => (
+            <button
+              key={p}
+              onClick={() =>
+                setPlatforms((cur) =>
+                  cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]
+                )
+              }
+              className={`btn !min-w-0 !rounded-xl !px-4 text-sm ${
+                platforms.includes(p)
+                  ? "bg-neutral-900 text-white"
+                  : "bg-neutral-100 text-neutral-500"
+              }`}
+            >
+              {p === "instagram" ? "Instagram · Real One" : p === "twitter" ? "Twitter/X · Operator" : "LinkedIn · Operator"}
+            </button>
+          ))}
+        </div>
+        <button
+          className="btn-primary w-full disabled:opacity-50"
+          disabled={aiBusy !== null || platforms.length === 0}
+          onClick={async () => {
+            setAiBusy("variants");
+            setAiError(null);
+            try {
+              const res = await fetch("/api/variants/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ideaId: idea.id, platforms }),
+              });
+              const data = await res.json();
+              if (!res.ok) {
+                setAiError(data?.error ?? "Variant generation failed.");
+                return;
+              }
+              router.push(`/idea/${idea.id}#variants`);
+              router.refresh();
+            } catch {
+              setAiError("Variant generation failed — check your connection.");
+            } finally {
+              setAiBusy(null);
+            }
+          }}
+        >
+          {aiBusy === "variants" ? "Writing variants…" : "Generate platform variants ▸"}
+        </button>
+      </section>
 
       {/* Transcript slide-over */}
       {showTranscript && (
