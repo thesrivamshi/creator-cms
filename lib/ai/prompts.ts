@@ -28,6 +28,52 @@ export const ENRICH_SYSTEM = `You organize a solo creator's content ideas. Given
 }
 Return ONLY the JSON object — no markdown fences, no commentary.`;
 
+/* ---------------- Script Studio assists (writing tasks, Anthropic) -------- */
+
+function brandVoice(brand: string, g: BrandGuidelines | null): string {
+  if (brand === "operator") return `Write in the "The Operator" voice:\n${g?.operator || "high-signal, ownership-oriented, credible"}`;
+  if (brand === "both") return brandContext(g);
+  return `Write in the "The Real One" voice:\n${g?.real_one || "unfiltered friend energy, funny, direct, zero polish"}`;
+}
+
+export const SUGGEST_HOOKS_SYSTEM = `You write scroll-stopping opening hooks for short-form creator content. Return a JSON array of exactly 5 hook strings — each under 140 characters, each a different angle (curiosity, contrarian, stakes, specificity, story-drop). Return ONLY the JSON array.`;
+
+export function suggestHooksPrompt(p: Record<string, unknown>, g: BrandGuidelines | null): string {
+  return [
+    brandVoice(String(p.brand ?? "real_one"), g),
+    `Idea title: ${p.title ?? ""}`,
+    p.summary ? `Summary: ${p.summary}` : "",
+    p.transcript ? `Transcript excerpt: ${String(p.transcript).slice(0, 8000)}` : "",
+    p.existingHook ? `The creator's current hook draft (write 5 alternatives, don't repeat it): ${p.existingHook}` : "",
+    "Write 5 hooks for this idea.",
+  ].filter(Boolean).join("\n\n");
+}
+
+export const DRAFT_PARTS_SYSTEM = `You structure short-form creator stories. Given raw material, propose a beat structure of 3-6 story beats (the Story between the Hook and the End). Each beat is 1-3 sentences the creator can film/say. Return a JSON array of beat strings only.`;
+
+export function draftPartsPrompt(p: Record<string, unknown>, g: BrandGuidelines | null): string {
+  return [
+    brandVoice(String(p.brand ?? "real_one"), g),
+    p.hook ? `Hook: ${p.hook}` : "",
+    `Idea title: ${p.title ?? ""}`,
+    p.summary ? `Summary: ${p.summary}` : "",
+    p.transcript ? `Transcript: ${String(p.transcript).slice(0, 12000)}` : "",
+    "Propose the story beats.",
+  ].filter(Boolean).join("\n\n");
+}
+
+export const SUGGEST_ENDING_SYSTEM = `You write endings for short-form creator content: either a tight close that lands the point, or a cliffhanger that makes the next post inevitable. Return a JSON array of exactly 3 alternative ending strings (each under 200 characters). Return ONLY the JSON array.`;
+
+export function suggestEndingPrompt(p: Record<string, unknown>, g: BrandGuidelines | null): string {
+  const parts = Array.isArray(p.parts) ? (p.parts as string[]).join("\n- ") : "";
+  return [
+    brandVoice(String(p.brand ?? "real_one"), g),
+    p.hook ? `Hook: ${p.hook}` : "",
+    parts ? `Story beats:\n- ${parts}` : "",
+    "Write 3 alternative endings/cliffhangers.",
+  ].filter(Boolean).join("\n\n");
+}
+
 export function enrichPrompt(input: {
   sourceType: string;
   url?: string | null;

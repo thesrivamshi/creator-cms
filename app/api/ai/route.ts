@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { completeTask } from "@/lib/ai";
 import { AIError, AI_ERROR_MESSAGES, type TaskKind } from "@/lib/ai/types";
-import type { BrandGuidelines } from "@/lib/ai/prompts";
+import {
+  DRAFT_PARTS_SYSTEM,
+  SUGGEST_ENDING_SYSTEM,
+  SUGGEST_HOOKS_SYSTEM,
+  draftPartsPrompt,
+  suggestEndingPrompt,
+  suggestHooksPrompt,
+  type BrandGuidelines,
+} from "@/lib/ai/prompts";
 import type { Route } from "@/lib/ai/router";
 
 // Single AI gateway (docs/06-ai-provider-layer.md): all client AI actions call
@@ -17,7 +25,25 @@ interface TaskSpec {
 }
 
 const TASKS: Record<string, TaskSpec> = {
-  // M4 Script Studio assists and M5 variants register here.
+  suggest_hooks: {
+    kind: "writing",
+    system: () => SUGGEST_HOOKS_SYSTEM,
+    prompt: suggestHooksPrompt,
+    maxTokens: 800,
+  },
+  draft_parts: {
+    kind: "writing",
+    system: () => DRAFT_PARTS_SYSTEM,
+    prompt: draftPartsPrompt,
+    maxTokens: 1200,
+  },
+  suggest_ending: {
+    kind: "writing",
+    system: () => SUGGEST_ENDING_SYSTEM,
+    prompt: suggestEndingPrompt,
+    maxTokens: 600,
+  },
+  // M5 platform-variant generation registers here.
 };
 
 export async function POST(request: Request) {
@@ -32,7 +58,7 @@ export async function POST(request: Request) {
   const spec = TASKS[task];
   if (!spec) {
     return NextResponse.json(
-      { error: `Unknown task '${task}'. Available: ${Object.keys(TASKS).join(", ") || "(none yet — Script Studio tasks land in M4)"}` },
+      { error: `Unknown task '${task}'. Available: ${Object.keys(TASKS).join(", ")}` },
       { status: 400 }
     );
   }
