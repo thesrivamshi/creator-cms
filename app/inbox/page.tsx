@@ -3,6 +3,7 @@ import Nav from "@/components/nav";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import NoteComposer from "./note-composer";
+import VoiceRecorder from "./voice-recorder";
 import { BrandChip, StatusChip } from "@/components/chips";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,10 @@ export default async function InboxPage() {
           <h1 className="text-2xl font-bold">Idea Inbox</h1>
         </header>
 
-        <NoteComposer />
+        <div className="space-y-3">
+          <VoiceRecorder />
+          <NoteComposer />
+        </div>
 
         {!ideas || ideas.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center">

@@ -5,6 +5,38 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+function TranscribeAgain({ ideaId, onDone }: { ideaId: string; onDone: () => void }) {
+  const [state, setState] = useState<"idle" | "busy" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function run() {
+    setState("busy");
+    setMessage(null);
+    const res = await fetch("/api/capture/voice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ideaId }),
+    });
+    if (res.ok) {
+      setState("idle");
+      onDone();
+    } else {
+      const data = await res.json().catch(() => null);
+      setState("error");
+      setMessage(data?.error ?? "Transcription failed.");
+    }
+  }
+
+  return (
+    <div className="mt-2">
+      <button className="btn-secondary !min-h-0 !px-3 !py-2 text-sm disabled:opacity-50" disabled={state === "busy"} onClick={run}>
+        {state === "busy" ? "Transcribing…" : "Transcribe again"}
+      </button>
+      {message && <p className="mt-1 text-sm text-red-600">{message}</p>}
+    </div>
+  );
+}
+
 const STATUSES = [
   "captured",
   "reviewed",
@@ -192,6 +224,7 @@ export default function IdeaEditor({
           <span className="mb-1 block text-sm font-medium">Original recording</span>
           {/* The recording is the source of truth; it is kept permanently. */}
           <audio controls preload="metadata" src={audioUrl} className="w-full" />
+          <TranscribeAgain ideaId={idea.id} onDone={() => router.refresh()} />
         </div>
       )}
 
