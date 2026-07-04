@@ -160,6 +160,10 @@ export default function IdeaEditor({
         onChange={(e) => set("title", e.target.value)}
       />
 
+      <Link href={`/idea/${idea.id}/studio`} className="btn-primary w-full">
+        ✍️ Open Script Studio
+      </Link>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="block">
           <span className="mb-1 block text-sm font-medium">Status</span>
