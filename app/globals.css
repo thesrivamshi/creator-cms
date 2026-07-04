@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-neutral-50 text-neutral-900 antialiased;
+  /* iPad: avoid accidental text-size adjustment on rotation */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* All interactive elements meet the 44px touch target rule */
+@layer components {
+  .btn {
+    @apply inline-flex min-h-touch min-w-touch items-center justify-center rounded-xl px-5 py-3 text-base font-medium transition-colors select-none;
+    touch-action: manipulation;
+  }
+  .btn-primary {
+    @apply btn bg-neutral-900 text-white active:bg-neutral-700;
+  }
+  .btn-secondary {
+    @apply btn bg-white border border-neutral-300 text-neutral-900 active:bg-neutral-100;
+  }
+  .input {
+    @apply w-full min-h-touch rounded-xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none focus:border-neutral-900 focus:ring-2 focus:ring-neutral-900/10;
+  }
+}
