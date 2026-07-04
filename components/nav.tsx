@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/inbox", label: "Inbox" },
+  { href: "/calendar", label: "Calendar" },
   { href: "/settings", label: "Settings" },
 ];
 

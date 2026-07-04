@@ -74,6 +74,60 @@ export function suggestEndingPrompt(p: Record<string, unknown>, g: BrandGuidelin
   ].filter(Boolean).join("\n\n");
 }
 
+/* ---------------- Platform variants (tone adapter, M5) -------------------- */
+
+const PLATFORM_RULES: Record<string, string> = {
+  instagram:
+    "Instagram Reel caption + on-screen script. Persona: The Real One. Structure: killer first line (the hook), short punchy lines, line breaks for rhythm, a CTA to comment/share, 3-5 lowercase hashtags at the end. Total under 2,200 characters — aim for 300-800.",
+  twitter:
+    "Twitter/X post or short thread. Persona: The Operator. If one post: under 280 characters, high-signal, no hashtags. If a thread (2-5 tweets): number them '1/' '2/' etc, first tweet is the hook, each tweet stands alone. No emojis unless they carry meaning.",
+  linkedin:
+    "LinkedIn post. Persona: The Operator. Structure: 1-2 line hook before the fold, short paragraphs with whitespace, concrete numbers/artifacts where possible, a closing line that invites discussion. 900-1,800 characters. No hashtag spam (0-3 max).",
+};
+
+export function variantSystem(platform: string): string {
+  return `You adapt a creator's script into a platform-native post. ${PLATFORM_RULES[platform] ?? ""}
+Return STRICT JSON: {"hook": string, "body": string, "media_notes": string}
+- "hook": the opening line/scroll-stopper for this platform
+- "body": the COMPLETE post text, ready to copy-paste (include the hook inside it where natural)
+- "media_notes": 1-2 sentences on what visual/clip to pair (draw on the script's visual references if given)
+Return ONLY the JSON object.`;
+}
+
+export function variantPrompt(
+  p: {
+    platform: string;
+    title: string | null;
+    summary: string | null;
+    hook: string | null;
+    parts: { body: string; visual: string | null }[];
+    ending: string | null;
+    transcript: string | null;
+  },
+  g: BrandGuidelines | null
+): string {
+  const persona = p.platform === "instagram" ? "real_one" : "operator";
+  const voice =
+    persona === "real_one"
+      ? `Persona "The Real One":\n${g?.real_one || "unfiltered friend energy, funny, direct, zero polish"}`
+      : `Persona "The Operator":\n${g?.operator || "high-signal, ownership-oriented, credible; show the work"}`;
+  const beats = p.parts
+    .map((part, i) => `${i + 1}. ${part.body}${part.visual ? ` [visual: ${part.visual}]` : ""}`)
+    .join("\n");
+  return [
+    voice,
+    `Idea: ${p.title ?? ""}`,
+    p.summary ? `Summary: ${p.summary}` : "",
+    p.hook ? `Script hook: ${p.hook}` : "",
+    beats ? `Story beats:\n${beats}` : "",
+    p.ending ? `Ending: ${p.ending}` : "",
+    !p.hook && !beats && p.transcript ? `Raw transcript: ${p.transcript.slice(0, 8000)}` : "",
+    `Write the ${p.platform} variant.`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 export function enrichPrompt(input: {
   sourceType: string;
   url?: string | null;

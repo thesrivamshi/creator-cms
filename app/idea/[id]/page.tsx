@@ -2,6 +2,7 @@ import Nav from "@/components/nav";
 import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import IdeaEditor from "./idea-editor";
+import VariantsList, { type Variant } from "./variants-list";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +30,18 @@ export default async function IdeaPage({ params }: { params: { id: string } }) {
     audioUrl = data?.signedUrl ?? null;
   }
 
+  const { data: variants } = await supabase
+    .from("variants")
+    .select("id, platform, hook, body, media_notes, status, posted_url")
+    .eq("idea_id", idea.id)
+    .order("created_at", { ascending: true });
+
   return (
     <>
       <Nav active="/inbox" />
-      <main className="mx-auto max-w-3xl p-4 pb-28 sm:p-6">
+      <main className="mx-auto max-w-3xl space-y-8 p-4 pb-28 sm:p-6">
         <IdeaEditor idea={idea} audioUrl={audioUrl} />
+        <VariantsList variants={(variants ?? []) as Variant[]} />
       </main>
     </>
   );
