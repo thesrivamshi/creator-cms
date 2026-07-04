@@ -2,6 +2,7 @@ import Nav from "@/components/nav";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsClient from "./settings-client";
+import SignOutButton from "@/app/inbox/sign-out-button";
 
 export default async function SettingsPage() {
   const supabase = createClient();
@@ -32,6 +33,10 @@ export default async function SettingsPage() {
           initialGuidelines={(profile?.brand_guidelines as Record<string, string>) ?? {}}
           initialRoutes={(profile?.model_routes as Record<string, { provider: string; model: string }>) ?? {}}
         />
+        <div className="mt-10 flex items-center justify-between border-t border-neutral-200 pt-6">
+          <span className="text-sm text-neutral-500">{user.email}</span>
+          <SignOutButton />
+        </div>
       </main>
     </>
   );
