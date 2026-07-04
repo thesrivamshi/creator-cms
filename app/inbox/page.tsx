@@ -1,3 +1,4 @@
+import Nav from "@/components/nav";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import SignOutButton from "./sign-out-button";
@@ -16,6 +17,8 @@ export default async function InboxPage() {
     .upsert({ user_id: user.id }, { onConflict: "user_id", ignoreDuplicates: true });
 
   return (
+    <>
+    <Nav active="/inbox" />
     <main className="mx-auto max-w-3xl p-6">
       <header className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Idea Inbox</h1>
@@ -30,5 +33,6 @@ export default async function InboxPage() {
         </p>
       </div>
     </main>
+    </>
   );
 }
